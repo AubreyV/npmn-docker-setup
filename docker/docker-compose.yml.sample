@@ -1,0 +1,81 @@
+version: '3'
+services:
+
+  #PHP Service
+  backend:
+    image: php-workspace:latest
+    container_name: backend
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    ports:
+      - "9001:9000"
+    volumes:
+       - ./:/var/www
+       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+
+  # Node Service
+  client:
+    image: node:latest
+    container_name: client
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www
+    command: "npm --prefix /var/www/client run start"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/var/www
+    networks:
+      - app-network
+
+  # Nginx Service
+  server:
+    image: nginx:alpine
+    container_name: server
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8050:80"
+      - "8443:443"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - app-network
+
+  # MySQL Service
+  database:
+    image: mysql:5.7.22
+    container_name: database
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: local-socialcat
+      MYSQL_USER: root
+      MYSQL_PASSWORD: socialcat
+      MYSQL_ROOT_PASSWORD: socialcat
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - app-network
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+
+#Volumes
+volumes:
+  dbdata:
+    driver: local
