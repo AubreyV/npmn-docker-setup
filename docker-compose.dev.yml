@@ -2,26 +2,23 @@ version: '3.7'
 services:
   # Client Service
   client-dev:
-    container_name: client-local
+    container_name: client-dev
     build:
       context: ./wayway_frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     tty: true
     working_dir: /var/www/wayway_frontend
     ports:
-      - '3001:3000'
-    volumes:
-      - './wayway_frontend:/var/www/wayway_frontend'
-      - '/var/www/wayway_frontend/node_modules'
-    environment:
-      - CHOKIDAR_USEPOLLING=true npm start
+      - '80:80'
     networks:
       - app-network
 
 
   #PHP Service
   backend:
-    image: php-workspace:latest
+    build:
+      context: ./wayway_backend
+      dockerfile: Dockerfile
     container_name: backend
     restart: unless-stopped
     tty: true
